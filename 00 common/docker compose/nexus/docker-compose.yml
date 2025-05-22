@@ -1,0 +1,13 @@
+services:
+  nexus:
+    image: sonatype/nexus3:latest  # 使用 Nexus 3 镜像
+    container_name: nexus
+    ports:
+      - "8081:8081"  # 映射容器的 8081 端口到宿主机的 8081 端口
+    volumes:
+    # mkdir -p ./nexus-data && chown -R 200:200 ./nexus-data
+      - ./nexus-data:/nexus-data  # 持久化数据，挂载宿主机目录到容器目录
+    environment:
+      - MAX_HEAP=768m  # 设置最大堆内存为 768MB
+    user: "200"  # 以 UID 200 运行容器，确保权限正确
+    restart: no

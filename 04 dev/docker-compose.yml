@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: mysql8.4
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+  
+  pgsql:
+    image: postgres:17
+    container_name: pgsql17
+    restart: always
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
+    environment:
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5432:5432" 
+    volumes:
+      - ./pgsql/data:/var/lib/postgresql/data
+      - ./pgsql/postgresql.conf:/etc/postgresql/postgresql.conf
+
+  redis:
+    image: redis:8.0
+    restart: always
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    container_name: redis8.0
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+

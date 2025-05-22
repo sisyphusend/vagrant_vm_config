@@ -1,0 +1,62 @@
+services:
+
+  gitea:
+    image: docker.gitea.com/gitea:1.23.8
+    container_name: gitea
+    restart: always
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    ports:
+      - "3000:3000"
+      - "2222:2222"
+    volumes:
+      - ./gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - default
+
+  jenkins:
+    image: jenkins/jenkins:latest-jdk21
+    container_name: jenkins
+    user: root
+    restart: always
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - default
+
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./registry_data:/var/lib/registry
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - default
+
+  build_agent:
+    image: build_agent_asdf:latest
+    container_name: build_agent_asdf
+    restart: always
+    ports:
+      - "2233:22" 
+    volumes:
+      - ./workspace:/root/workspace 
+    networks:
+      - default
+    
+
+networks:
+  default:
+    driver: bridge

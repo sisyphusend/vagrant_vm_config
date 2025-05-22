@@ -1,0 +1,57 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64"
+  config.vm.box_version = "12.20250126.1"
+  
+  config.vm.define :"debian_dev" do | debian_dev |
+      debian_dev.vm.hostname = "debian-dev"
+      debian_dev.vm.network "private_network", ip: "192.168.56.41"
+      debian_dev.vm.disk :disk, size: "200GB", primary: true
+      debian_dev.vm.provider :virtualbox do | vb|
+      vb.name = "debian-dev"
+      vb.memory = 16384
+      vb.cpus = 4
+    end
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    set -e
+    sudo su
+    # 幂等设置vagrant和root用户密码
+    echo "vagrant:vagrant" | sudo chpasswd
+    echo "root:vagrant" | sudo chpasswd
+
+    # 幂等安装docker
+    if ! command -v docker >/dev/null 2>&1; then
+      apt-get update
+      apt-get install -y ca-certificates curl
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+        $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    fi
+
+    # 幂等设置时区
+    if [ "$(timedatectl show -p TimeZone --value)" != "Asia/Shanghai" ]; then
+      timedatectl set-ntp true
+      timedatectl set-timezone Asia/Shanghai
+      timedatectl set-local-rtc 0
+    fi
+
+    # 幂等设置ssh允许密码登录和root登录
+    grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config || \
+      sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    grep -q "^PermitRootLogin yes" /etc/ssh/sshd_config || \
+      sed -i 's/^#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    systemctl restart ssh
+
+    # 幂等安装vim
+    dpkg -s vim >/dev/null 2>&1 || apt-get install -y vim
+  SHELL
+
+end
+    
