@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+
 # 创建挂载目录（幂等，已存在不会报错）
 mkdir -p ./gitea
 mkdir -p ./jenkins_home

@@ -1,27 +1,33 @@
 FROM debian:bookworm-slim
 
-# 环境变量
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai
-
 # 设置时区，避免时间不一致
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
-# 安装基础依赖
+# 设置 root 密码为 root
+RUN echo 'root:root' | chpasswd
+
+# 安装基础依赖（使用 apt 而不是 apk）
 RUN apt-get update && apt-get install -y \
-    curl git unzip zip tar bash ca-certificates \
-    openssh-server sudo gnupg lsb-release locales tzdata \
+    openjdk-17-jre \
+    curl \
+    git \
+    ca-certificates \
+    openssh-server \
+    bash \
     && rm -rf /var/lib/apt/lists/*
 
-# 设置语言
-RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
-    && locale-gen
+# 设置语言（Debian 方式）
+RUN apt-get update && apt-get install -y locales && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen
+
 
 # 设置 SSH
-RUN mkdir /var/run/sshd
-RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
-RUN echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
+RUN mkdir -p /var/run/sshd && \
+    echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
+    ssh-keygen -A
 
 # 安装 ASDF 到 root
 WORKDIR /root
