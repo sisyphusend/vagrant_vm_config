@@ -10,19 +10,7 @@ services:
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/conf.d:/etc/mysql/conf.d
-
-  mysql57:
-    image: mysql:5.7
-    container_name: mysql5.7
-    restart: always
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-    ports:
-      - "3307:3306"
-    volumes:
-      - ./mysql57/data:/var/lib/mysql
-      - ./mysql57/conf.d:/etc/mysql/conf.d
-
+  
   pgsql:
     image: postgres:17
     container_name: pgsql17
@@ -45,3 +33,4 @@ services:
       - '6379:6379'
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+

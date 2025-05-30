@@ -12,6 +12,9 @@
 带有GUI的虚拟机直接在用vmware创建，不用vagrant管理
 
 
+#### vmware 虚拟机
+esxi8 用户名:root 密码:root@2025
+
 
 
 
