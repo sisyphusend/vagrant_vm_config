@@ -1,0 +1,63 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "terrywang/archlinux"
+  config.vm.box_version = "4.24.0529"
+  
+  config.vm.define :"archlinux" do | archlinux |
+      archlinux.vm.hostname = "archlinux"
+      archlinux.vm.network "private_network", ip: "192.168.56.61"
+      archlinux.vm.disk :disk, size: "300GB", primary: true
+      archlinux.vm.provider :virtualbox do | vb |
+      vb.name = "archlinux"
+      vb.memory = 32768
+      vb.cpus = 8
+    end
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    set -e
+    sudo su
+    # 幂等设置vagrant和root用户密码
+    echo "vagrant:vagrant" | sudo chpasswd
+    echo "root:vagrant" | sudo chpasswd
+
+    # 幂等安装docker
+    # if ! command -v docker >/dev/null 2>&1; then
+    #   apt-get update
+    #   apt-get install -y ca-certificates curl
+    #   install -m 0755 -d /etc/apt/keyrings
+    #   curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    #   chmod a+r /etc/apt/keyrings/docker.asc
+    #   echo \
+    #     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    #     $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
+    #     tee /etc/apt/sources.list.d/docker.list > /dev/null
+    #   apt-get update
+    #   apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    # fi
+
+    # 幂等设置时区
+    if [ "$(timedatectl show -p TimeZone --value)" != "Asia/Shanghai" ]; then
+      timedatectl set-ntp true
+      timedatectl set-timezone Asia/Shanghai
+      timedatectl set-local-rtc 0
+    fi
+
+    # 幂等设置ssh允许密码登录和root登录
+    grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config || \
+      sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    grep -q "^PermitRootLogin yes" /etc/ssh/sshd_config || \
+      sed -i 's/^#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+
+    # # 幂等安装vim
+    # dpkg -s vim >/dev/null 2>&1 || apt-get install -y vim
+
+    # # 幂等安装git
+    # dpkg -s git >/dev/null 2>&1 || apt-get install -y git
+
+    # # 幂等安装 build-essential
+    # dpkg -s build-essential >/dev/null 2>&1 || apt-get install -y build-essential
+  SHELL
+
+end
+    

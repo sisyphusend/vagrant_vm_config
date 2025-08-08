@@ -5,11 +5,11 @@ Vagrant.configure("2") do |config|
   config.vm.define :"debian_dev" do | debian_dev |
       debian_dev.vm.hostname = "debian-dev"
       debian_dev.vm.network "private_network", ip: "192.168.56.41"
-      debian_dev.vm.disk :disk, size: "200GB", primary: true
+      debian_dev.vm.disk :disk, size: "300GB", primary: true
       debian_dev.vm.provider :virtualbox do | vb|
       vb.name = "debian-dev"
-      vb.memory = 16384
-      vb.cpus = 4
+      vb.memory = 32768
+      vb.cpus = 8
     end
   end
 
@@ -51,6 +51,12 @@ Vagrant.configure("2") do |config|
 
     # 幂等安装vim
     dpkg -s vim >/dev/null 2>&1 || apt-get install -y vim
+
+    # 幂等安装git
+    dpkg -s git >/dev/null 2>&1 || apt-get install -y git
+
+    # 幂等安装 build-essential
+    dpkg -s build-essential >/dev/null 2>&1 || apt-get install -y build-essential
   SHELL
 
 end
